@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="images">
+    <file>person-having-hearing-issues.jpg</file>
+    <file>emblem1.png</file>
+    <file>Flag_of_Tanzania.svg.png</file>
+    <file>ega.png</file>
+    <file>logo.png</file>
+    <file>back_image.png</file>
+    <file>AI speech analysis.png</file>
+    <file>voiceAnalysis.png</file>
+  </qresource>
+  <qresource prefix="newPrefix"/>
+  <qresource prefix="newPrefix"/>
+</RCC>
