@@ -13,7 +13,6 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -92,6 +91,108 @@ class Ui_MainWindow(object):
         self.gridLayout_19.setObjectName(u"gridLayout_19")
         self.stackedWidget = QStackedWidget(self.frame_pages)
         self.stackedWidget.setObjectName(u"stackedWidget")
+        self.page_5 = QWidget()
+        self.page_5.setObjectName(u"page_5")
+        self.gridLayout_24 = QGridLayout(self.page_5)
+        self.gridLayout_24.setObjectName(u"gridLayout_24")
+        self.label_3 = QLabel(self.page_5)
+        self.label_3.setObjectName(u"label_3")
+        font = QFont()
+        font.setPointSize(20)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label_3.setFont(font)
+        self.label_3.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-image: url(./images/voiceAnalysis.png);\n"
+"background-position:center;\n"
+"background-repeate:no-repeate;")
+        self.label_3.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_24.addWidget(self.label_3, 0, 0, 1, 1)
+
+        self.widget_15 = QWidget(self.page_5)
+        self.widget_15.setObjectName(u"widget_15")
+        self.gridLayout_25 = QGridLayout(self.widget_15)
+        self.gridLayout_25.setObjectName(u"gridLayout_25")
+        self.horizontalLayout_11 = QHBoxLayout()
+        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
+        self.pushButton_24 = QPushButton(self.widget_15)
+        self.pushButton_24.setObjectName(u"pushButton_24")
+        font1 = QFont()
+        font1.setPointSize(12)
+        font1.setBold(True)
+        font1.setWeight(75)
+        self.pushButton_24.setFont(font1)
+        self.pushButton_24.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-color: rgb(26, 95, 180);")
+
+        self.horizontalLayout_11.addWidget(self.pushButton_24)
+
+        self.pushButton_25 = QPushButton(self.widget_15)
+        self.pushButton_25.setObjectName(u"pushButton_25")
+        self.pushButton_25.setFont(font1)
+        self.pushButton_25.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-color: rgb(229, 165, 10);")
+
+        self.horizontalLayout_11.addWidget(self.pushButton_25)
+
+
+        self.gridLayout_25.addLayout(self.horizontalLayout_11, 0, 0, 1, 1)
+
+
+        self.gridLayout_24.addWidget(self.widget_15, 1, 0, 1, 1)
+
+        self.stackedWidget.addWidget(self.page_5)
+        self.page_6 = QWidget()
+        self.page_6.setObjectName(u"page_6")
+        self.gridLayout_26 = QGridLayout(self.page_6)
+        self.gridLayout_26.setObjectName(u"gridLayout_26")
+        self.widget_16 = QWidget(self.page_6)
+        self.widget_16.setObjectName(u"widget_16")
+
+        self.gridLayout_26.addWidget(self.widget_16, 0, 0, 1, 5)
+
+        self.pushButton_26 = QPushButton(self.page_6)
+        self.pushButton_26.setObjectName(u"pushButton_26")
+        self.pushButton_26.setFont(font1)
+        self.pushButton_26.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-color: rgb(26, 95, 180);")
+
+        self.gridLayout_26.addWidget(self.pushButton_26, 1, 0, 1, 1)
+
+        self.pushButton_27 = QPushButton(self.page_6)
+        self.pushButton_27.setObjectName(u"pushButton_27")
+        self.pushButton_27.setFont(font1)
+        self.pushButton_27.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-color: rgb(38, 162, 105);")
+
+        self.gridLayout_26.addWidget(self.pushButton_27, 1, 1, 1, 1)
+
+        self.pushButton_28 = QPushButton(self.page_6)
+        self.pushButton_28.setObjectName(u"pushButton_28")
+        self.pushButton_28.setFont(font1)
+        self.pushButton_28.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-color: rgb(229, 165, 10);")
+
+        self.gridLayout_26.addWidget(self.pushButton_28, 1, 2, 1, 1)
+
+        self.pushButton_29 = QPushButton(self.page_6)
+        self.pushButton_29.setObjectName(u"pushButton_29")
+        self.pushButton_29.setFont(font1)
+        self.pushButton_29.setStyleSheet(u"color: rgb(255, 255, 255);\n"
+"background-color: rgb(165, 29, 45);")
+
+        self.gridLayout_26.addWidget(self.pushButton_29, 1, 3, 1, 1)
+
+        self.pushButton_30 = QPushButton(self.page_6)
+        self.pushButton_30.setObjectName(u"pushButton_30")
+        self.pushButton_30.setFont(font1)
+        self.pushButton_30.setStyleSheet(u"background-color: rgb(97, 53, 131);\n"
+"color: rgb(255, 255, 255);")
+
+        self.gridLayout_26.addWidget(self.pushButton_30, 1, 4, 1, 1)
+
+        self.stackedWidget.addWidget(self.page_6)
         self.page_1 = QWidget()
         self.page_1.setObjectName(u"page_1")
         self.verticalLayout_9 = QVBoxLayout(self.page_1)
@@ -104,11 +205,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.label_8 = QLabel(self.page_1)
         self.label_8.setObjectName(u"label_8")
-        font = QFont()
-        font.setPointSize(25)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_8.setFont(font)
+        font2 = QFont()
+        font2.setPointSize(25)
+        font2.setBold(True)
+        font2.setWeight(75)
+        self.label_8.setFont(font2)
         self.label_8.setStyleSheet(u"color: rgb(255, 255, 255);")
         self.label_8.setAlignment(Qt.AlignCenter)
 
@@ -126,9 +227,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.label_9 = QLabel(self.page_1)
         self.label_9.setObjectName(u"label_9")
-        font1 = QFont()
-        font1.setPointSize(12)
-        self.label_9.setFont(font1)
+        font3 = QFont()
+        font3.setPointSize(12)
+        self.label_9.setFont(font3)
         self.label_9.setStyleSheet(u"color: rgb(255, 255, 255);")
 
         self.horizontalLayout_3.addWidget(self.label_9)
@@ -151,7 +252,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.label_10 = QLabel(self.page_1)
         self.label_10.setObjectName(u"label_10")
-        self.label_10.setFont(font1)
+        self.label_10.setFont(font3)
         self.label_10.setStyleSheet(u"color: rgb(255, 255, 255);")
 
         self.horizontalLayout_4.addWidget(self.label_10)
@@ -175,11 +276,11 @@ class Ui_MainWindow(object):
 
         self.pushButton_3 = QPushButton(self.page_1)
         self.pushButton_3.setObjectName(u"pushButton_3")
-        font2 = QFont()
-        font2.setPointSize(15)
-        font2.setBold(True)
-        font2.setWeight(75)
-        self.pushButton_3.setFont(font2)
+        font4 = QFont()
+        font4.setPointSize(15)
+        font4.setBold(True)
+        font4.setWeight(75)
+        self.pushButton_3.setFont(font4)
         self.pushButton_3.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(26, 95, 180);")
 
@@ -222,11 +323,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_6 = QPushButton(self.widget_2)
         self.pushButton_6.setObjectName(u"pushButton_6")
-        font3 = QFont()
-        font3.setPointSize(12)
-        font3.setBold(True)
-        font3.setWeight(75)
-        self.pushButton_6.setFont(font3)
+        self.pushButton_6.setFont(font1)
         self.pushButton_6.setStyleSheet(u"background-color: rgb(28, 113, 216);\n"
 "color: rgb(255, 255, 255);")
 
@@ -234,7 +331,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_7 = QPushButton(self.widget_2)
         self.pushButton_7.setObjectName(u"pushButton_7")
-        self.pushButton_7.setFont(font3)
+        self.pushButton_7.setFont(font1)
         self.pushButton_7.setStyleSheet(u"background-color: rgb(192, 28, 40);\n"
 "color: rgb(255, 255, 255);")
 
@@ -277,7 +374,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_4 = QPushButton(self.widget)
         self.pushButton_4.setObjectName(u"pushButton_4")
-        self.pushButton_4.setFont(font3)
+        self.pushButton_4.setFont(font1)
         self.pushButton_4.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(28, 113, 216);")
 
@@ -285,7 +382,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_5 = QPushButton(self.widget)
         self.pushButton_5.setObjectName(u"pushButton_5")
-        self.pushButton_5.setFont(font3)
+        self.pushButton_5.setFont(font1)
         self.pushButton_5.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(192, 28, 40);")
 
@@ -296,7 +393,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_8 = QPushButton(self.page_2)
         self.pushButton_8.setObjectName(u"pushButton_8")
-        self.pushButton_8.setFont(font3)
+        self.pushButton_8.setFont(font1)
         self.pushButton_8.setStyleSheet(u"background-color: rgb(97, 53, 131);\n"
 "color: rgb(255, 255, 255);")
 
@@ -304,7 +401,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_9 = QPushButton(self.page_2)
         self.pushButton_9.setObjectName(u"pushButton_9")
-        self.pushButton_9.setFont(font3)
+        self.pushButton_9.setFont(font1)
         self.pushButton_9.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(38, 162, 105);")
 
@@ -343,7 +440,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_10 = QPushButton(self.widget_7)
         self.pushButton_10.setObjectName(u"pushButton_10")
-        self.pushButton_10.setFont(font3)
+        self.pushButton_10.setFont(font1)
         self.pushButton_10.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(26, 95, 180);")
 
@@ -351,7 +448,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_11 = QPushButton(self.widget_7)
         self.pushButton_11.setObjectName(u"pushButton_11")
-        self.pushButton_11.setFont(font3)
+        self.pushButton_11.setFont(font1)
         self.pushButton_11.setStyleSheet(u"background-color: rgb(192, 28, 40);\n"
 "color: rgb(255, 255, 255);")
 
@@ -388,7 +485,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_13 = QPushButton(self.widget_8)
         self.pushButton_13.setObjectName(u"pushButton_13")
-        self.pushButton_13.setFont(font3)
+        self.pushButton_13.setFont(font1)
         self.pushButton_13.setStyleSheet(u"background-color: rgb(28, 113, 216);\n"
 "color: rgb(255, 255, 255);")
 
@@ -396,7 +493,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_12 = QPushButton(self.widget_8)
         self.pushButton_12.setObjectName(u"pushButton_12")
-        self.pushButton_12.setFont(font3)
+        self.pushButton_12.setFont(font1)
         self.pushButton_12.setStyleSheet(u"background-color: rgb(192, 28, 40);\n"
 "color: rgb(255, 255, 255);")
 
@@ -407,7 +504,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_14 = QPushButton(self.page_3)
         self.pushButton_14.setObjectName(u"pushButton_14")
-        self.pushButton_14.setFont(font3)
+        self.pushButton_14.setFont(font1)
         self.pushButton_14.setStyleSheet(u"background-color: rgb(38, 162, 105);\n"
 "color: rgb(255, 255, 255);")
 
@@ -415,7 +512,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_15 = QPushButton(self.page_3)
         self.pushButton_15.setObjectName(u"pushButton_15")
-        self.pushButton_15.setFont(font3)
+        self.pushButton_15.setFont(font1)
         self.pushButton_15.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(97, 53, 131);")
 
@@ -428,7 +525,7 @@ class Ui_MainWindow(object):
         self.gridLayout_13.setObjectName(u"gridLayout_13")
         self.pushButton_21 = QPushButton(self.page)
         self.pushButton_21.setObjectName(u"pushButton_21")
-        self.pushButton_21.setFont(font3)
+        self.pushButton_21.setFont(font1)
         self.pushButton_21.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "background-color: rgb(38, 162, 105);")
 
@@ -436,7 +533,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_16 = QPushButton(self.page)
         self.pushButton_16.setObjectName(u"pushButton_16")
-        self.pushButton_16.setFont(font3)
+        self.pushButton_16.setFont(font1)
         self.pushButton_16.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
 "color: rgb(255, 255, 255);")
 
@@ -477,7 +574,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.label_13 = QLabel(self.frame_5)
         self.label_13.setObjectName(u"label_13")
-        self.label_13.setFont(font)
+        self.label_13.setFont(font2)
         self.label_13.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "")
         self.label_13.setAlignment(Qt.AlignCenter)
@@ -488,18 +585,18 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.label_14 = QLabel(self.frame_5)
         self.label_14.setObjectName(u"label_14")
-        self.label_14.setFont(font2)
+        self.label_14.setFont(font4)
         self.label_14.setStyleSheet(u"color: rgb(255, 255, 255);")
 
         self.horizontalLayout.addWidget(self.label_14)
 
         self.label_15 = QLabel(self.frame_5)
         self.label_15.setObjectName(u"label_15")
-        font4 = QFont()
-        font4.setPointSize(50)
-        font4.setBold(True)
-        font4.setWeight(75)
-        self.label_15.setFont(font4)
+        font5 = QFont()
+        font5.setPointSize(50)
+        font5.setBold(True)
+        font5.setWeight(75)
+        self.label_15.setFont(font5)
         self.label_15.setStyleSheet(u"color: rgb(26, 95, 180);\n"
 "border-color: rgb(38, 162, 105);")
         self.label_15.setAlignment(Qt.AlignCenter)
@@ -533,18 +630,18 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.label_16 = QLabel(self.widget_10)
         self.label_16.setObjectName(u"label_16")
-        self.label_16.setFont(font3)
+        self.label_16.setFont(font1)
         self.label_16.setStyleSheet(u"color: rgb(255, 255, 255);")
 
         self.verticalLayout_6.addWidget(self.label_16)
 
         self.label_17 = QLabel(self.widget_10)
         self.label_17.setObjectName(u"label_17")
-        font5 = QFont()
-        font5.setPointSize(9)
-        font5.setBold(False)
-        font5.setWeight(50)
-        self.label_17.setFont(font5)
+        font6 = QFont()
+        font6.setPointSize(9)
+        font6.setBold(False)
+        font6.setWeight(50)
+        self.label_17.setFont(font6)
         self.label_17.setStyleSheet(u"color: rgb(255, 255, 255);")
 
         self.verticalLayout_6.addWidget(self.label_17)
@@ -650,11 +747,7 @@ class Ui_MainWindow(object):
 
         self.label_23 = QLabel(self.widget_10)
         self.label_23.setObjectName(u"label_23")
-        font6 = QFont()
-        font6.setPointSize(20)
-        font6.setBold(True)
-        font6.setWeight(75)
-        self.label_23.setFont(font6)
+        self.label_23.setFont(font)
         self.label_23.setStyleSheet(u"color: rgb(26, 95, 180);")
 
         self.horizontalLayout_10.addWidget(self.label_23)
@@ -757,6 +850,14 @@ class Ui_MainWindow(object):
         self.pushButton_19.setText(QCoreApplication.translate("MainWindow", u"voice filter", None))
         self.pushButton_22.setText(QCoreApplication.translate("MainWindow", u"voice comparison", None))
         self.pushButton_23.setText(QCoreApplication.translate("MainWindow", u"genarate report", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"WELCOME TO FORENSIC VOICE COMPARISON TOOL", None))
+        self.pushButton_24.setText(QCoreApplication.translate("MainWindow", u"SINGLE SPEAKER", None))
+        self.pushButton_25.setText(QCoreApplication.translate("MainWindow", u"MULTSPEAKER", None))
+        self.pushButton_26.setText(QCoreApplication.translate("MainWindow", u"UPLOAD FILE", None))
+        self.pushButton_27.setText(QCoreApplication.translate("MainWindow", u"PLAY", None))
+        self.pushButton_28.setText(QCoreApplication.translate("MainWindow", u"PAUSE", None))
+        self.pushButton_29.setText(QCoreApplication.translate("MainWindow", u"TRIM", None))
+        self.pushButton_30.setText(QCoreApplication.translate("MainWindow", u"NEXT", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"UPLOAD VOICE CLIPS", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Crime Voice", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"upload file", None))

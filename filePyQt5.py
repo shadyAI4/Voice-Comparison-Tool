@@ -8,7 +8,8 @@ from PySide2.QtCore import QTimer, Qt, QUrl
 from PySide2.QtGui import QColor
 from PySide2.QtMultimedia import QMediaPlayer, QMediaContent
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QVBoxLayout, QWidget, QFileDialog, QMainWindow, QApplication, QGraphicsDropShadowEffect
+from PySide2.QtWidgets import QVBoxLayout, QWidget, QFileDialog, QMainWindow, QApplication, QGraphicsDropShadowEffect, \
+    QMessageBox
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -17,6 +18,8 @@ from scipy.signal import spectrogram
 from df.enhance import enhance, init_df, load_audio, save_audio
 from df.utils import download_file
 from datetime import datetime
+import pyqtgraph as pg
+from pydub import AudioSegment
 
 import new
 
@@ -79,6 +82,14 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.pushButton_18.clicked.connect(self.genarate_report_page)
         self.pushButton_20.clicked.connect(self.report_button_page)
 
+        self.pushButton_24.clicked.connect(self.single_speaker_selection)
+        self.pushButton_25.clicked.connect(self.mult_speaker_selection)
+        self.pushButton_26.clicked.connect(self.upload_audio_trim)
+        self.pushButton_27.clicked.connect(self.play_audio_trim)
+        self.pushButton_28.clicked.connect(self.pause_audio_trim)
+        self.pushButton_29.clicked.connect(self.trim_audio)
+        self.pushButton_30.clicked.connect(self.single_speaker_selection)
+
         # ***************************** CREATING FIGURES FOR DATA WITH NOISE*************************************************************************************?????????????
 
         self.figure_waveform_crime = Figure()
@@ -138,12 +149,110 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.enhanced_crime = None
         self.enhanced_suspect = None
         self.GetSimilarity = None
+        # WAVE FORM TIMER
+
+        self.media_player = QMediaPlayer(self)
+        self.media_player.setVolume(50)
+        self.media_player.mediaStatusChanged.connect(self.update_waveform)
+
+        self.waveform_plot = pg.PlotWidget()
+        self.waveform_plot.showGrid(x=True, y=True)
+        self.waveform_plot.setLabel("left", "Amplitude")
+        self.waveform_plot.setLabel("bottom", "Time (s)")
+        self.layout_waveform = QVBoxLayout()
+        self.layout_waveform.addWidget(self.waveform_plot)
+        self.widget_16.setLayout(self.layout_waveform)
+
+        self.trim_start = 0
+        self.trim_end = 0
+        self.playback_line = None
+        self.region = pg.LinearRegionItem([0, 0])  # Initialize the region for trimming
+        self.region.sigRegionChangeFinished.connect(self.update_trim_region)
+
+        self.selected_audio = None  # Store the selected audio
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_waveform)
+        self.timer.start(100)
 
     def create_canvas_widget(self, canvas):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.addWidget(canvas)
         return widget
+
+    def single_speaker_selection(self):
+        self.stackedWidget.setCurrentIndex(2)
+    def mult_speaker_selection(self):
+        self.stackedWidget.setCurrentIndex(1)
+    def upload_audio_trim(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open Audio File", "", "Audio Files (*.mp3 *.wav)")
+        if file_path:
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(file_path)))
+
+    def play_audio_trim(self):
+        if self.media_player.state() == QMediaPlayer.PlayingState:
+            self.media_player.pause()
+        else:
+            self.media_player.play()
+
+    def pause_audio_trim(self):
+        if self.media_player.state() == QMediaPlayer.PlayingState:
+            self.media_player.pause()
+
+    def trim_audio(self):
+        file_path = self.media_player.media().canonicalUrl().toLocalFile()
+        if not file_path:
+            QMessageBox.warning(self, "No Audio File", "Please select an audio file to trim.")
+            return
+
+        audio = AudioSegment.from_file(file_path)
+
+        start_time = self.region.getRegion()[0] * 1000  # Convert to milliseconds
+        end_time = self.region.getRegion()[1] * 1000  # Convert to milliseconds
+
+        trimmed_audio = audio[start_time:end_time]
+
+        output_file_path, _ = QFileDialog.getSaveFileName(self, "Save Trimmed Audio", "", "Audio Files (*.mp3 *.wav)")
+        if output_file_path:
+            output_format = os.path.splitext(output_file_path)[1][
+                            1:].lower()  # Get the file extension for output format
+            if output_format in ['mp3', 'wav']:
+                trimmed_audio.export(output_file_path, format=output_format)  # Export audio with specified format
+            else:
+                QMessageBox.warning(self, "Unsupported Format", "Unsupported output format. Please save as MP3 or WAV.")
+
+    def update_waveform(self):
+        if self.media_player.state() == QMediaPlayer.PlayingState:
+            position = self.media_player.position() / 1000  # Convert to seconds
+            duration = self.media_player.duration() / 1000  # Convert to seconds
+            self.waveform_plot.clear()
+            self.waveform_plot.plot([0, duration], [0, 0], pen=pg.mkPen("k", width=2))
+
+            # Draw a line indicating the playback position
+            if self.playback_line:
+                self.waveform_plot.removeItem(self.playback_line)
+            self.playback_line = self.waveform_plot.plot([position, position], [-1, 1], pen=pg.mkPen("r", width=2))
+
+            self.waveform_plot.addItem(self.region)  # Add the region item for trimming
+            self.region.setRegion([self.trim_start, self.trim_end])  # Set the region based on trim start and end
+
+    def update_trim_region(self):
+        region = self.region.getRegion()
+        self.trim_start = region[0]
+        self.trim_end = region[1]
+
+        if self.selected_audio is not None:
+            self.selected_audio.close()
+
+        file_path = self.media_player.media().canonicalUrl().toLocalFile()
+        audio = AudioSegment.from_file(file_path)
+        start_time = int(region[0] * 1000)  # Convert to milliseconds
+        end_time = int(region[1] * 1000)  # Convert to milliseconds
+        self.selected_audio = audio[start_time:end_time]
+
+        self.media_player.setPosition(start_time)
+        self.media_player.play()
 
     def upload_crime_voice(self):
         file_dialog = QFileDialog()
@@ -173,28 +282,28 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
                                          "color: rgb(255, 255, 255);")
         self.stop_audio()
         self.stop_audio_suspect()
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(2)
 
     def filter_page(self):
         self.pushButton_19.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
         self.stop_audio_filter()
         self.stop_audio_suspect_filter()
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(3)
 
     def compare_page(self):
         self.pushButton_22.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
-        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(4)
 
     def report_button_page(self):
         self.pushButton_23.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
-        self.stackedWidget.setCurrentIndex(3)
+        self.stackedWidget.setCurrentIndex(5)
 
     def process_and_display_results(self):
         if self.crime_filename and self.suspect_filename:
-            self.stackedWidget.setCurrentIndex(1)  # Switch to page_2 of the stacked widget
+            self.stackedWidget.setCurrentIndex(3)  # Switch to page_2 of the stacked widget
             crime_voice_path = self.crime_filename
             suspect_voice_path = self.suspect_filename
             self.show_uploaded_clips(crime_voice_path, suspect_voice_path)
@@ -298,12 +407,12 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
 
     def process_and_filter_voice_clips(self):
         if self.crime_filename and self.suspect_filename:
-            self.progressBar.setValue(100)
+            # self.progressBar.setValue(100)
             self.pushButton_19.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
                                              "color: rgb(255, 255, 255);")
             self.stop_audio()
             self.stop_audio_suspect()
-            self.stackedWidget.setCurrentIndex(2)  # Switch to page_2 of the stacked widget
+            self.stackedWidget.setCurrentIndex(4)  # Switch to page_2 of the stacked widget
             crime_voice_path = self.crime_filename
             suspect_voice_path = self.suspect_filename
             print("yeaaaaa", crime_voice_path)
@@ -379,7 +488,7 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
                                          "color: rgb(255, 255, 255);")
         self.stop_audio_suspect_filter()
         self.stop_audio_filter()
-        self.stackedWidget.setCurrentIndex(3)
+        self.stackedWidget.setCurrentIndex(5)
         sound_encoder = VoiceEncoder(verbose=False)
         file_1 = preprocess_wav(sound_1_path)
         file_2 = preprocess_wav(sound_2_path)
@@ -400,7 +509,7 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
 
     def open_genarate_reports(self):
         self.label_23.setText(str(self.GetSimilarity))
-        self.stackedWidget.setCurrentIndex(4)
+        self.stackedWidget.setCurrentIndex(6)
 
     def genarate_report_page(self):
         self.pushButton_23.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
@@ -480,9 +589,18 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         file_dialog.setDirectory('')
         self.crime_filename = file_dialog.selectedFiles()
         self.suspect_filename = file_dialog.selectedFiles()
+        self.pushButton_17.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.pushButton_19.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.pushButton_22.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.pushButton_23.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.crime_filename = None
+        self.suspect_filename = None
         self.stackedWidget.setCurrentIndex(0)
-        # self.crime_filename = ""
-        # self.suspect_filename = ""
+
 
 
 # *************************************************** WELCOME WINDOW PART
