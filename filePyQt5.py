@@ -444,14 +444,14 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.label_39.setText(str(self.file_format))
         self.label_40.setText(str(self.hash_value))
         self.label_41.setText(str(self.creation_time_stamp))
-        self.label_42.setText(str(self.bit_rate))
-        self.label_43.setText(str(self.sample_rate))
+        self.label_42.setText(str(self.bit_rate)+'bps')
+        self.label_43.setText(str(self.sample_rate)+'Hz')
         # for suspect
         self.label_49.setText(str(self.file_format_suspect))
         self.label_51.setText(str(self.hash_value_suspect))
         self.label_53.setText(str(self.creation_time_stamp_suspect))
-        self.label_55.setText(str(self.bit_rate_suspect))
-        self.label_57.setText(str(self.sample_rate_suspect))
+        self.label_55.setText(str(self.bit_rate_suspect)+"bps")
+        self.label_57.setText(str(self.sample_rate_suspect)+'Hz')
     def authenticate_page(self):
         self.pushButton_38.setStyleSheet(u"background-color: #14213d;\n"
                                          "color: rgb(255, 255, 255);")
