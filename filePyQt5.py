@@ -8,17 +8,23 @@ from PySide2.QtCore import QTimer, Qt, QUrl
 from PySide2.QtGui import QColor
 from PySide2.QtMultimedia import QMediaPlayer, QMediaContent
 from PySide2.QtUiTools import QUiLoader
+from PySide2.QtWebEngineWidgets import QWebEngineView
 from PySide2.QtWidgets import QVBoxLayout, QWidget, QFileDialog, QMainWindow, QApplication, QGraphicsDropShadowEffect, \
-    QMessageBox
+    QMessageBox, QLabel, QTextEdit
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from reportlab.lib.units import inch
 from scipy.io import wavfile
 from scipy.signal import spectrogram
 from df.enhance import enhance, init_df, load_audio, save_audio
 from df.utils import download_file
 from datetime import datetime
 import pyqtgraph as pg
+from mutagen import File
+from pydub.utils import mediainfo
+import hashlib
+
 from pydub import AudioSegment
 
 import new
@@ -29,7 +35,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import Paragraph, Table, TableStyle
+from reportlab.platypus import Paragraph, Table, TableStyle, SimpleDocTemplate, Image, Spacer
 from reportlab.lib import colors
 
 from resemblyzer import preprocess_wav, VoiceEncoder
@@ -63,7 +69,9 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.pushButton_2.clicked.connect(self.upload_suspect_voice)
         self.pushButton_3.clicked.connect(self.process_and_display_results)
         self.pushButton_8.clicked.connect(self.process_and_filter_voice_clips)
-        self.pushButton_9.clicked.connect(self.upload_page)
+        self.pushButton_34.clicked.connect(self.upload_page)
+        self.pushButton_35.clicked.connect(self.home_page)
+        self.pushButton_9.clicked.connect(self.authenticate_page)
         # Connect play and stop buttons to their respective functions
         self.pushButton_6.clicked.connect(self.play_audio_supect)
         self.pushButton_7.clicked.connect(self.stop_audio_suspect)
@@ -78,7 +86,7 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.pushButton_12.clicked.connect(self.stop_audio_suspect_filter)
         self.pushButton_15.clicked.connect(self.send_data_to_compare)
         self.pushButton_21.clicked.connect(self.compare_page)
-        self.pushButton_16.clicked.connect(self.open_genarate_reports)
+        self.pushButton_16.clicked.connect(self.genarate_report_page)
         self.pushButton_18.clicked.connect(self.genarate_report_page)
         self.pushButton_20.clicked.connect(self.report_button_page)
 
@@ -89,6 +97,13 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.pushButton_28.clicked.connect(self.pause_audio_trim)
         self.pushButton_29.clicked.connect(self.trim_audio)
         self.pushButton_30.clicked.connect(self.single_speaker_selection)
+
+
+        self.pushButton_33.clicked.connect(self.authenticate_page)
+        self.pushButton_31.clicked.connect(self.show_uploaded_clips)
+        self.pushButton_32.clicked.connect(self.metadata_page)
+
+        self.pushButton_18.clicked.connect(self.view_report)
 
         # ***************************** CREATING FIGURES FOR DATA WITH NOISE*************************************************************************************?????????????
 
@@ -149,6 +164,56 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.enhanced_crime = None
         self.enhanced_suspect = None
         self.GetSimilarity = None
+
+        self.case_number_line6 = None
+        self.investigator_name_line5 = None
+        self.suspect_name_line8 = None
+        self.date_and_time_of_case = None
+        self.device_name_line9 = None
+        self.crime_scene_location_line11 = None
+        self.crime_audio_name_line10 = None
+        self.crime_file_format = None
+        self.suspect_audio_name_line12 = None
+        self.suspect_audio_format_combo2 = None
+        self.date_and_time_of_acquisition_Date2 = None
+        self.conclusion_word = None
+
+        # THIS ARE THE METADATA VALUES OF CRIME
+        self.sample_rate = None
+        self.bit_rate = None
+        self.file_format = None
+        self.audio_channel = None
+        self.codec_information = None
+        self.hash_value = None
+        self.creation_time_stamp = None
+        self.modification_time_stamp = None
+        self.digital_watermark = None
+        self.gps_info = None
+        self.device_specific_meta_data = None
+
+        # THIS ARE THE METADATA VALUES OF SUSPECT
+        self.sample_rate_suspect = None
+        self.bit_rate_suspect = None
+        self.file_format_suspect = None
+        self.audio_channel_suspect = None
+        self.codec_information_suspect = None
+        self.hash_value_suspect = None
+        self.creation_time_stamp_suspect = None
+        self.modification_time_stamp_suspect = None
+        self.digital_watermark_suspect = None
+        self.gps_info_suspect = None
+        self.device_specific_meta_data_suspect = None
+
+        self.title_label = QLabel("<h1>Forensic Voice Comparison Report</h1>")
+        self.gridLayout_18.addWidget(self.title_label)
+        # self.layout = QVBoxLayout()
+        # self.layout.addWidget(self.web_view)
+        # self.widget_10.setLayout(self.layout)
+
+        self.report_text_edit = QTextEdit()
+        self.report_text_edit.setReadOnly(True)
+        self.gridLayout_18.addWidget(self.report_text_edit)
+
         # WAVE FORM TIMER
 
         self.media_player = QMediaPlayer(self)
@@ -182,6 +247,8 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         return widget
 
     def single_speaker_selection(self):
+        self.pushButton_37.setStyleSheet(u"background-color: #14213d;\n"
+                                         "color: rgb(255, 255, 255);")
         self.stackedWidget.setCurrentIndex(2)
     def mult_speaker_selection(self):
         self.stackedWidget.setCurrentIndex(1)
@@ -277,6 +344,11 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
                 # return file_path
                 # Process the uploaded suspect voice file, e.g., save it or perform further actions
 
+    def home_page(self):
+        self.pushButton_37.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.stackedWidget.setCurrentIndex(0)
+
     def upload_page(self):
         self.pushButton_17.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
@@ -284,33 +356,114 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.stop_audio_suspect()
         self.stackedWidget.setCurrentIndex(2)
 
+    def metadata_page(self):
+        # self.pushButton_17.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+        #                                  "color: rgb(255, 255, 255);")
+        self.pushButton_38.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.stop_audio()
+        self.stop_audio_suspect()
+        self.stackedWidget.setCurrentIndex(3)
+
+
     def filter_page(self):
         self.pushButton_19.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
         self.stop_audio_filter()
         self.stop_audio_suspect_filter()
-        self.stackedWidget.setCurrentIndex(3)
+        self.stackedWidget.setCurrentIndex(5)
 
     def compare_page(self):
         self.pushButton_22.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
-        self.stackedWidget.setCurrentIndex(4)
+        self.stackedWidget.setCurrentIndex(6)
 
     def report_button_page(self):
         self.pushButton_23.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
-        self.stackedWidget.setCurrentIndex(5)
+        self.stackedWidget.setCurrentIndex(7)
 
     def process_and_display_results(self):
+        self.case_number_line6 = self.lineEdit_6.text().strip()
+        self.investigator_name_line5 = self.lineEdit_5.text().strip()
+        self.suspect_name_line8 = self.lineEdit_8.text().strip()
+        self.date_and_time_of_case = self.dateTimeEdit.dateTime()
+        self.date_and_time_of_case = self.date_and_time_of_case.toString('yyyy-MM-dd HH:mm:ss')
+        self.device_name_line9 = self.lineEdit_9.text().strip()
+        self.crime_scene_location_line11 = self.lineEdit_11.text().strip()
+        self.crime_audio_name_line10 = self.lineEdit_10.text().strip()
+        self.crime_file_format = self.comboBox.currentText()
+        self.suspect_audio_name_line12 = self.lineEdit_12.text().strip()
+        self.suspect_audio_format_combo2 = self.comboBox_2.currentText()
+        self.date_and_time_of_acquisition_Date2 = self.dateTimeEdit_2.dateTime()
+        self.date_and_time_of_acquisition_Date2 = self.date_and_time_of_acquisition_Date2.toString('yyyy-MM-dd HH:mm:ss')
+        print(self.date_and_time_of_case)
+        print(self.crime_file_format)
+        print(self.case_number_line6)
         if self.crime_filename and self.suspect_filename:
+            print(self.crime_filename)
+            self.pushButton_17.setStyleSheet(u"background-color: #14213d;\n"
+                                             "color: rgb(255, 255, 255);")
             self.stackedWidget.setCurrentIndex(3)  # Switch to page_2 of the stacked widget
             crime_voice_path = self.crime_filename
             suspect_voice_path = self.suspect_filename
-            self.show_uploaded_clips(crime_voice_path, suspect_voice_path)
+            self.get_audio_clips_metadata(crime_voice_path, suspect_voice_path)
+            # self.show_uploaded_clips(crime_voice_path, suspect_voice_path)
+    def get_audio_clips_metadata(self,crime_file, suspect_file, hash_function='md5'):
+        hash_func1 = getattr(hashlib, hash_function)()
+        with open(crime_file, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_func1.update(chunk)
+        stats = os.stat(crime_file)
+        self.creation_time_stamp = datetime.fromtimestamp(stats.st_ctime)
+        self.modification_time_stamp = datetime.fromtimestamp(stats.st_mtime)
+        info = mediainfo(crime_file)
+        self.audio_channel = info.get('channels')
+        self.sample_rate = info.get('sample_rate')
+        self.bit_rate = info.get('bit_rate')
+        self.codec_information = info.get('codec_name')
+        self.file_format = info.get('format_name')
+        self.hash_value = hash_func1.hexdigest()
 
-    def show_uploaded_clips(self, crime_filename, suspect_filename):
-        self.pushButton_17.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
+    #     SUSPECT METADATA
+        hash_func2 = getattr(hashlib, hash_function)()
+        with open(suspect_file, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_func2.update(chunk)
+        stats = os.stat(suspect_file)
+        self.creation_time_stamp_suspect = datetime.fromtimestamp(stats.st_ctime)
+        self.modification_time_stamp_suspect = datetime.fromtimestamp(stats.st_mtime)
+        info = mediainfo(suspect_file)
+        self.audio_channel_suspect = info.get('channels')
+        self.sample_rate_suspect = info.get('sample_rate')
+        self.bit_rate_suspect = info.get('bit_rate')
+        self.codec_information_suspect = info.get('codec_name')
+        self.file_format_suspect = info.get('format_name')
+        self.hash_value_suspect = hash_func2.hexdigest()
+
+        self.label_39.setText(str(self.file_format))
+        self.label_40.setText(str(self.hash_value))
+        self.label_41.setText(str(self.creation_time_stamp))
+        self.label_42.setText(str(self.bit_rate))
+        self.label_43.setText(str(self.sample_rate))
+        # for suspect
+        self.label_49.setText(str(self.file_format_suspect))
+        self.label_51.setText(str(self.hash_value_suspect))
+        self.label_53.setText(str(self.creation_time_stamp_suspect))
+        self.label_55.setText(str(self.bit_rate_suspect))
+        self.label_57.setText(str(self.sample_rate_suspect))
+    def authenticate_page(self):
+        self.pushButton_38.setStyleSheet(u"background-color: #14213d;\n"
                                          "color: rgb(255, 255, 255);")
+        self.pushButton_39.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.stackedWidget.setCurrentIndex(4)
+    def show_uploaded_clips(self):
+        self.pushButton_39.setStyleSheet(u"background-color: #14213d;\n"
+                                         "color: rgb(255, 255, 255);")
+        self.stackedWidget.setCurrentIndex(5)
+        # self.pushButton_17.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
+        #                                  "color: rgb(255, 255, 255);")
         crime_voice_path = self.crime_filename  # Replace with actual file path
         suspect_voice_path = self.suspect_filename  # Replace with actual file path
         print("Crime Screen Path", crime_voice_path)
@@ -412,7 +565,9 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
                                              "color: rgb(255, 255, 255);")
             self.stop_audio()
             self.stop_audio_suspect()
-            self.stackedWidget.setCurrentIndex(4)  # Switch to page_2 of the stacked widget
+            self.pushButton_19.setStyleSheet(u"background-color: #14213d;\n"
+                                             "color: rgb(255, 255, 255);")
+            self.stackedWidget.setCurrentIndex(6)  # Switch to page_2 of the stacked widget
             crime_voice_path = self.crime_filename
             suspect_voice_path = self.suspect_filename
             print("yeaaaaa", crime_voice_path)
@@ -481,47 +636,62 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
 
     def send_data_to_compare(self):
         if self.enhanced_crime and self.enhanced_suspect:
+
             self.compareSounds(self.enhanced_crime, self.enhanced_suspect)
 
     def compareSounds(self, sound_1_path, sound_2_path):
-        self.pushButton_22.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
+        self.pushButton_22.setStyleSheet(u"background-color: #14213d;\n"
                                          "color: rgb(255, 255, 255);")
         self.stop_audio_suspect_filter()
         self.stop_audio_filter()
-        self.stackedWidget.setCurrentIndex(5)
+        self.stackedWidget.setCurrentIndex(7)
         sound_encoder = VoiceEncoder(verbose=False)
         file_1 = preprocess_wav(sound_1_path)
         file_2 = preprocess_wav(sound_2_path)
 
         encoded_sound1 = sound_encoder.embed_utterance(file_1)
         encoded_sound2 = sound_encoder.embed_utterance(file_2)
-
+        print("THis is the sound one", encoded_sound1)
+        print("THis is the sound two", encoded_sound2)
         dot_product_size = np.dot(encoded_sound1, encoded_sound2)
         norm_sound1 = np.linalg.norm(encoded_sound1)
         norm_sound2 = np.linalg.norm(encoded_sound2)
 
         # kosinus benzerliğini hesaplama
-        self.GetSimilarity = dot_product_size / (norm_sound1 * norm_sound2)
+        self.GetSimilarity = round(dot_product_size / (norm_sound1 * norm_sound2),2)
         self.label_15.setText(str(self.GetSimilarity))
+
+        if(0<= self.GetSimilarity < 0.3):
+            self.conclusion_word =f"Based on the likelihood ratio {round(self.GetSimilarity,2)}The analysis indicates that it is highly unlikely that the speakers are the same person."
+            self.label_79.setText(f"Based on the likelihood ratio {round(self.GetSimilarity,2)}The analysis indicates that it is highly unlikely that the speakers are the same person.")
+        if (0.3 <= self.GetSimilarity < 0.7):
+            self.conclusion_word=f"Based on the likelihood ratio {round(self.GetSimilarity,2)} Evidence suggests the speakers are likely different."
+            self.label_79.setText(f"Based on the likelihood ratio {round(self.GetSimilarity,2)} Evidence suggests the speakers are likely different.")
+        if (0.7 <= self.GetSimilarity < 0.9):
+            self.conclusion_word=f"Based on the likelihood ratio {round(self.GetSimilarity,2)} The current data does not provide a clear answer. Additional information or analysis is required to make a more definitive conclusion."
+            self.label_79.setText(f"Based on the likelihood ratio {round(self.GetSimilarity,2)} The current data does not provide a clear answer. Additional information or analysis is required to make a more definitive conclusion.")
+        if (0.9 <= self.GetSimilarity < 1.999):
+            self.conclusion_word=f"Based on the likelihood ratio  {round(self.GetSimilarity,2) } The analysis strongly suggests that the speakers are the same person."
+            self.label_79.setText(f"Based on the likelihood ratio  {round(self.GetSimilarity,2) } The analysis strongly suggests that the speakers are the same person.")
         # GetSimilarity = GetSimilarity * 100
         #
         # GetSimilarity = int(GetSimilarity)
 
     def open_genarate_reports(self):
         self.label_23.setText(str(self.GetSimilarity))
-        self.stackedWidget.setCurrentIndex(6)
+        self.stackedWidget.setCurrentIndex(0)
 
     def genarate_report_page(self):
-        self.pushButton_23.setStyleSheet(u"background-color: rgb(26, 95, 180);\n"
+        self.pushButton_23.setStyleSheet(u"background-color: #14213d;\n"
                                          "color: rgb(255, 255, 255);")
-        suspect_name = self.lineEdit.text().strip()
-        About_Case = self.textEdit_3.toPlainText().strip()
-        CommentOfInvestigator = self.textEdit_4.toPlainText().strip()
-        ResultShortSummary = self.textEdit_5.toPlainText().strip()
+        suspect_name = "self.lineEdit.text().strip()"
+        About_Case = "self.textEdit_3.toPlainText().strip()"
+        CommentOfInvestigator = "self.textEdit_4.toPlainText().strip()"
+        ResultShortSummary = "self.textEdit_5.toPlainText().strip()"
         ResultInNumeric = str(self.GetSimilarity)
         date = datetime.now().strftime('%Y-%m-%d')
         header = ["SUSPECT NAME", "ABOUT CASE", "INVESTIGATOR COMMENT", "SHORT SUMMARY", "LIKELIHOOD RATIO", "DATE"]
-        data = [suspect_name, About_Case, CommentOfInvestigator, ResultShortSummary, ResultInNumeric, date]
+        data = [ ResultInNumeric, date]
 
         if not os.path.exists('report'):
             os.makedirs('report')
@@ -535,60 +705,244 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
             writer.writerow(data)
 
         pdf_file_name = f'report_{suspect_name}{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pdf'
-        c = canvas.Canvas(pdf_file_name, pagesize=letter)
+        doc = SimpleDocTemplate(pdf_file_name, pagesize=letter)
 
-        image_path = '/home/shadyai/PycharmProjects/pyqtProject1/ui/images/voiceAnalysis.png'
-        img = ImageReader(image_path)
-        img_width, img_height = img.getSize()
-        aspect_ratio = img_height / img_width
-        desired_height = 200
-        desired_width = 800
-
-        c.drawImage(img, x=0, y=letter[1] - desired_height, width=desired_width, height=desired_height, mask='auto')
-
-        # Set font styles
-        title_style = ParagraphStyle(name='TitleStyle', fontName='Helvetica-Bold', fontSize=12, alignment=1)
-        subtitle_style = ParagraphStyle(name='SubtitleStyle', fontName='Helvetica', fontSize=12, alignment=1)
+        # Set up styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1, spaceAfter=14)
+        subtitle_style = ParagraphStyle(name='SubtitleStyle', parent=styles['Heading2'], alignment=1, spaceAfter=12)
+        normal_style = ParagraphStyle(name='NormalStyle', parent=styles['Normal'], spaceAfter=12)
         table_style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                   ('FONT', (0, 0), (-1, -1), 'Helvetica'),
                                   ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                                   ('GRID', (0, 0), (-1, -1), 1, colors.black)])
 
+        # Elements to be added to the PDF
+        elements = []
+
         # Title
-        title = Paragraph("<u>GENERAL REPORT FOR FORENSIC VOICE COMPARISON ANALYSIS TOOL</u>", title_style)
-        title.wrapOn(c, 400, 100)
-        title.drawOn(c, 100, 550)
+        elements.append(Paragraph("GENERAL REPORT FOR FORENSIC VOICE COMPARISON ANALYSIS TOOL", title_style))
+
+        # Image
+        image_path = '/home/shadyai/PycharmProjects/pyqtProject1/ui/images/voiceAnalysis.png'
+        img = Image(image_path, width=6 * inch, height=2 * inch)
+        elements.append(Spacer(1, 12))
+        elements.append(img)
+        elements.append(Spacer(1, 24))
 
         # Subtitle
-        subtitle = Paragraph("<u>ANALYSIS RESULTS</u>", subtitle_style)
-        subtitle.wrapOn(c, 400, 100)
-        subtitle.drawOn(c, 100, 530)
+        elements.append(Paragraph("ANALYSIS RESULTS", subtitle_style))
 
         # Table
         data = [['SN', 'ATTRIBUTE', 'INFORMATION'],
-                ['1', 'Name Of Suspect', suspect_name],
-                ['2', 'About Case', About_Case],
-                ['3', 'Comment Of Investigator', CommentOfInvestigator],
-                ['4', 'Short Summary Of Result', ResultShortSummary],
-                ['4', 'Likelihood Ration', ResultInNumeric],
-                ['4', 'Date', date]]
+                ['1', 'Case Number', self.case_number_line6],
+                ['2', 'Name of Investigator', self.investigator_name_line5],
+                ['3', 'Suspect Name', self.suspect_name_line8],
+                ['4', 'Date and Time of Case', self.date_and_time_of_case],
+                ['5', 'Device Name', self.device_name_line9],
+                ['6', 'Crime Scene Location', self.crime_scene_location_line11],
+                ['7', 'Crime Audio File Name', self.crime_audio_name_line10],
+                ['8', 'Crime Audio File Format', self.crime_file_format],
+                ['9', 'Suspect Audio File Name', self.suspect_audio_name_line12],
+                ['10', 'Suspect Audio FIle Format', self.suspect_audio_format_combo2],
+                ['11', 'Date And Time Of Acquisition', self.date_and_time_of_acquisition_Date2],
+                ['12', 'Crime Audio Hash Value', self.hash_value],
+                ['13', 'Suspect Audio Hash Value', self.hash_value_suspect]]
         t = Table(data, colWidths=[30, 200, 200])  # Increase table width
 
         t.setStyle(table_style)
-        t.wrapOn(c, 400, 400)
-        t.drawOn(c, 100, 410)
+        elements.append(t)
+        elements.append(Spacer(1, 24))
 
         # Forensic investigator sections
-        c.drawString(100, 390, "Forensic Investigator Name:")
-        c.drawString(100, 375, "Signature:")
+        elements.append(Paragraph("Forensic Investigator Name:", normal_style))
+        elements.append(Paragraph("Signature:", normal_style))
 
-        c.save()
+        # Build PDF
+        doc.build(elements)
 
         print(f"PDF report generated: {pdf_file_name}")
         file_dialog = QFileDialog()
         file_dialog.setDirectory('')
         self.crime_filename = file_dialog.selectedFiles()
         self.suspect_filename = file_dialog.selectedFiles()
+
+        # self.view_report(pdf_file_name)
+        report_text = f"""
+                        Forensic Voice Comparison Report
+
+                        Introduction
+
+                        Case ID: {self.case_number_line6}  
+                        Date: {self.date_and_time_of_acquisition_Date2}  
+                        Suspect Name : {self.suspect_name_line8}
+                        Analyst: {self.investigator_name_line5}
+
+                        Methodology
+
+                        1. Data Collection:
+                           Two voice samples were provided for analysis:
+                           - Suspect Voice Sample: {self.suspect_audio_name_line12}
+                           - Crime Scene Voice Sample: {self.crime_audio_name_line10}
+
+                        2. Pre-processing: 
+                           The audio files were converted to a consistent format (WAV) and sampled at 16 kHz. Noise reduction techniques were applied to enhance the quality of the recordings.
+
+                        4. Comparison: 
+                           A Machine learning model was used to genarate encodings of each Audio where this encodings contain the uniqueness of each voice by considereing features like frequency, pitch , Mel Spectogram , Amplitude etc
+
+                        Analysis
+
+                        Feature Extraction
+
+                        Suspect Voice Sample:
+                        - Duration: {10} seconds
+                        - Sampling Rate: {self.sample_rate_suspect} Hz
+                        - Bit Rate: {self.bit_rate_suspect} bps
+
+                        Crime Scene Voice Sample: 
+                        - Duration: {10} seconds
+                        - Sampling Rate: {self.sample_rate} Hz
+                        - Bit Rate: {self.bit_rate} bps
+
+                        Results:
+                        - Overall Likelihood Ratio (LR): {self.GetSimilarity}
+
+                        Results
+                        The likelihood ratio of {self.GetSimilarity} suggests that the probability of the two voice samples being from the same individual is significantly higher than being from different individuals. This indicates a strong similarity between the suspect's voice sample and the crime scene voice sample.
+
+                        Conclusion
+
+                        Based on the analysis conducted, there is strong evidence to suggest that the suspect's voice is likely the same as the voice recorded at the crime scene. The high likelihood ratio supports the hypothesis that the two voice samples originate from the same speaker.
+
+                        Recommendations:
+                        - Further forensic examination and corroboration with additional evidence are advised to strengthen the findings.
+                        - Consideration of context and other case-specific factors should be taken into account when interpreting the results.
+
+                        ---
+
+                        {self.investigator_name_line5} 
+                        Forensic Analyst
+                        """
+        self.report_text_edit.setPlainText(report_text)
+        self.stackedWidget.setCurrentIndex(8)
+
+    def view_report(self):
+        self.pushButton_36.setStyleSheet(u"background-color: #14213d;\n"
+                                         "color: rgb(255, 255, 255);")
+        filename = f'{self.suspect_name_line8}_{self.hash_value_suspect}_Forensic_Voice_Comparison_Report.pdf'
+
+        # Create a PDF document
+        doc = SimpleDocTemplate(filename, pagesize=letter)
+        story = []
+
+        # Define the styles for the document
+        styles = getSampleStyleSheet()
+        normal_style = styles['Normal']
+        title_style = styles['Title']
+
+        # Add title to the first page
+        title = Paragraph('Forensic Voice Comparison Report', title_style)
+        story.append(title)
+
+        # Add content to the report
+        content = f"""
+                        <b>Introduction</b>
+                        <b>Case ID:</b> {self.case_number_line6}  
+                        <b>Date:</b> {self.date_and_time_of_acquisition_Date2}  
+                        <b>Suspect Name :</b> {self.suspect_name_line8}
+                        <b>Analyst:</b> {self.investigator_name_line5}
+
+                        <b>Methodology</b>
+                        1. Data Collection:
+                           Two voice samples were provided for analysis:
+                           - <b>Suspect Voice Sample:</b> {self.suspect_audio_name_line12}
+                           - <b>Crime Scene Voice Sample:</b> {self.crime_audio_name_line10}
+                        2. Pre-processing: 
+                           The audio files were converted to a consistent format (WAV) and sampled at 16 kHz. Noise reduction techniques were applied to enhance the quality of the recordings.
+                        4. Comparison: 
+                           A Machine learning model was used to genarate encodings of each Audio where this encodings contain the uniqueness of each voice by considereing features like frequency, pitch , Mel Spectogram , Amplitude etc
+
+                        <b>Analysis</b>
+                        Suspect Voice Sample:
+                        - <b>Duration:</b> {10} seconds
+                        - <b>Sampling Rate:</b> {self.sample_rate_suspect} Hz
+                        Crime Scene Voice Sample: 
+                        - <b>Duration:</b> {10} seconds
+                        - <b>Sampling Rate:</b> {self.sample_rate} Hz
+
+                        <b>Results:</b>
+                        - Overall Likelihood Ratio (LR): {self.GetSimilarity}
+                        {self.conclusion_word}
+
+                        <b>Conclusion</b>
+                        {self.conclusion_word}
+
+                        <b>Recommendations:</b>
+                        - Further forensic examination and corroboration with additional evidence are advised to strengthen the findings.
+                        - Consideration of context and other case-specific factors should be taken into account when interpreting the results.
+                        <b>{self.investigator_name_line5} </b>
+                        Forensic Analyst
+                """
+
+        # Split the content into paragraphs and add to the story
+        paragraphs = content.split('\n')
+        for paragraph in paragraphs:
+            para = Paragraph(paragraph, normal_style)
+            story.append(para)
+            story.append(Spacer(1, 12))  # Add space between paragraphs
+            # Add watermark to every page
+        doc.build(story, onFirstPage=self.addWatermark, onLaterPages=self.addWatermark)
+
+        # Build the PDF document
+        # doc.build(story)
+        print(f'Report saved as {filename}')
+        self.crime_filename = None
+        self.suspect_filename = None
+        self.enhanced_crime = None
+        self.enhanced_suspect = None
+        self.GetSimilarity = None
+
+        self.case_number_line6 = None
+        self.investigator_name_line5 = None
+        self.suspect_name_line8 = None
+        self.date_and_time_of_case = None
+        self.device_name_line9 = None
+        self.crime_scene_location_line11 = None
+        self.crime_audio_name_line10 = None
+        self.crime_file_format = None
+        self.suspect_audio_name_line12 = None
+        self.suspect_audio_format_combo2 = None
+        self.date_and_time_of_acquisition_Date2 = None
+        self.conclusion_word = None
+        # THIS ARE THE METADATA VALUES OF CRIME
+        self.sample_rate = None
+        self.bit_rate = None
+        self.file_format = None
+        self.audio_channel = None
+        self.codec_information = None
+        self.hash_value = None
+        self.creation_time_stamp = None
+        self.modification_time_stamp = None
+        self.digital_watermark = None
+        self.gps_info = None
+        self.device_specific_meta_data = None
+
+        # THIS ARE THE METADATA VALUES OF SUSPECT
+        self.sample_rate_suspect = None
+        self.bit_rate_suspect = None
+        self.file_format_suspect = None
+        self.audio_channel_suspect = None
+        self.codec_information_suspect = None
+        self.hash_value_suspect = None
+        self.creation_time_stamp_suspect = None
+        self.modification_time_stamp_suspect = None
+        self.digital_watermark_suspect = None
+        self.gps_info_suspect = None
+        self.device_specific_meta_data_suspect = None
+        self.label_9.setText("Crime Voice")
+        self.label_10.setText("Suspect Voice")
+
         self.pushButton_17.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
         self.pushButton_19.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
@@ -597,10 +951,39 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
                                          "color: rgb(255, 255, 255);")
         self.pushButton_23.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
                                          "color: rgb(255, 255, 255);")
-        self.crime_filename = None
-        self.suspect_filename = None
+        self.pushButton_37.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.pushButton_38.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.pushButton_39.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.pushButton_36.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"
+                                         "color: rgb(255, 255, 255);")
         self.stackedWidget.setCurrentIndex(0)
 
+    def addWatermark(self, canvas, doc):
+        # Add watermark text to every page
+        # canvas.saveState()
+        # canvas.setFont('Helvetica', 120)
+        # canvas.setFillGray(0.8)  # Set the color of the watermark
+        # canvas.rotate(45)
+        # canvas.drawString(100, -40, "Confidential")
+        # canvas.restoreState()
+        # Load the logo image
+        logo_path = '/home/shadyai/PycharmProjects/pyqtProject1/ui/images/emblem1.png'
+        logo = ImageReader(logo_path)
+
+        # Calculate position to center the logo on each page
+        width, height = letter
+        logo_width, logo_height = logo.getSize()
+        x = (width - logo_width) / 2
+        y = (height - logo_height) / 2
+
+        # Add logo as watermark at the center of the page
+        canvas.saveState()
+        canvas.setFillAlpha(0.2)
+        canvas.drawImage(logo, x, y, width=logo_width, height=logo_height)
+        canvas.restoreState()
 
 
 # *************************************************** WELCOME WINDOW PART
@@ -671,6 +1054,7 @@ class SplashScreen(QMainWindow):
 
         # INCREASE COUNTER
         counter += 1
+
 
 if __name__ == '__main__':
     loader = QUiLoader()
