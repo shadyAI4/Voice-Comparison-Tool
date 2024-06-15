@@ -5,7 +5,7 @@ import librosa
 import numpy as np
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtCore import QTimer, Qt, QUrl
-from PySide2.QtGui import QColor
+from PySide2.QtGui import QColor, QPixmap
 from PySide2.QtMultimedia import QMediaPlayer, QMediaContent
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWebEngineWidgets import QWebEngineView
@@ -190,6 +190,7 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.digital_watermark = None
         self.gps_info = None
         self.device_specific_meta_data = None
+        self.crime_length=None
 
         # THIS ARE THE METADATA VALUES OF SUSPECT
         self.sample_rate_suspect = None
@@ -203,6 +204,7 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.digital_watermark_suspect = None
         self.gps_info_suspect = None
         self.device_specific_meta_data_suspect = None
+        self.suspect_length = None
 
         self.title_label = QLabel("<h1>Forensic Voice Comparison Report</h1>")
         self.gridLayout_18.addWidget(self.title_label)
@@ -384,6 +386,42 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.stackedWidget.setCurrentIndex(7)
 
     def process_and_display_results(self):
+        self.validate =True
+        if not self.lineEdit_6.text().strip():
+            self.validate = False
+            self.lineEdit_6.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_6.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        if not self.lineEdit_5.text().strip():
+            self.validate = False
+            self.lineEdit_5.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_5.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        if not self.lineEdit_8.text().strip():
+            self.validate = False
+            self.lineEdit_8.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_8.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        if not self.lineEdit_9.text().strip():
+            self.validate = False
+            self.lineEdit_9.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_9.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        if not self.lineEdit_11.text().strip():
+            self.validate = False
+            self.lineEdit_11.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_11.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        if not self.lineEdit_10.text().strip():
+            self.validate = False
+            self.lineEdit_10.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_10.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        if not self.lineEdit_12.text().strip():
+            self.validate = False
+            self.lineEdit_12.setStyleSheet('border: 2px solid red;')
+        else:
+            self.lineEdit_12.setStyleSheet(u"background-color: rgb(255, 255, 255);")
         self.case_number_line6 = self.lineEdit_6.text().strip()
         self.investigator_name_line5 = self.lineEdit_5.text().strip()
         self.suspect_name_line8 = self.lineEdit_8.text().strip()
@@ -400,7 +438,16 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         print(self.date_and_time_of_case)
         print(self.crime_file_format)
         print(self.case_number_line6)
-        if self.crime_filename and self.suspect_filename:
+        if not self.crime_filename and not self.suspect_filename:
+            self.validate = False
+        if self.validate:
+            self.lineEdit_6.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+            self.lineEdit_5.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+            self.lineEdit_8.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+            self.lineEdit_9.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+            self.lineEdit_10.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+            self.lineEdit_11.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+            self.lineEdit_12.setStyleSheet(u"background-color: rgb(255, 255, 255);")
             print(self.crime_filename)
             self.pushButton_17.setStyleSheet(u"background-color: #14213d;\n"
                                              "color: rgb(255, 255, 255);")
@@ -422,8 +469,10 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.sample_rate = info.get('sample_rate')
         self.bit_rate = info.get('bit_rate')
         self.codec_information = info.get('codec_name')
+        print("this are the metadata",self.codec_information)
         self.file_format = info.get('format_name')
         self.hash_value = hash_func1.hexdigest()
+        self.crime_length =self.get_audio_length(crime_file)
 
     #     SUSPECT METADATA
         hash_func2 = getattr(hashlib, hash_function)()
@@ -440,19 +489,45 @@ class MainHome(new.Ui_MainWindow, QtWidgets.QMainWindow):
         self.codec_information_suspect = info.get('codec_name')
         self.file_format_suspect = info.get('format_name')
         self.hash_value_suspect = hash_func2.hexdigest()
+        self.suspect_length = self.get_audio_length(suspect_file)
 
         self.label_39.setText(str(self.file_format))
         self.label_40.setText(str(self.hash_value))
         self.label_41.setText(str(self.creation_time_stamp))
+        self.label_65.setText(str(self.modification_time_stamp))
+        self.label_46.setText(str(self.codec_information))
+        self.label_69.setText(str(self.audio_channel))
+        self.label_59.setText(str(self.crime_length))
         self.label_42.setText(str(self.bit_rate)+'bps')
         self.label_43.setText(str(self.sample_rate)+'Hz')
         # for suspect
         self.label_49.setText(str(self.file_format_suspect))
         self.label_51.setText(str(self.hash_value_suspect))
         self.label_53.setText(str(self.creation_time_stamp_suspect))
+        self.label_67.setText(str(self.modification_time_stamp_suspect))
+        self.label_63.setText(str(self.codec_information_suspect))
+        self.label_71.setText(str(self.audio_channel_suspect))
+        self.label_61.setText(str(self.suspect_length))
         self.label_55.setText(str(self.bit_rate_suspect)+"bps")
         self.label_57.setText(str(self.sample_rate_suspect)+'Hz')
+
+    def get_audio_length(self,file_path):
+        audio = AudioSegment.from_file(file_path)
+        length_in_milliseconds = len(audio)
+        length_in_seconds = length_in_milliseconds / 1000.0
+        return length_in_seconds
+
     def authenticate_page(self):
+        print(self.creation_time_stamp.date())
+        self.new_date = datetime.strptime(self.date_and_time_of_acquisition_Date2, '%Y-%m-%d %H:%M:%S')
+        print(self.new_date.date())
+
+        if(self.creation_time_stamp.date() == self.new_date.date()):
+            self.label_58.setPixmap(QPixmap(u"./newPrefix/Group 2.png"))
+            self.pushButton_31.setEnabled(True)
+        else:
+            self.label_58.setPixmap(QPixmap(u"./newPrefix/Group 1.png"))
+            self.pushButton_31.setEnabled(False)
         self.pushButton_38.setStyleSheet(u"background-color: #14213d;\n"
                                          "color: rgb(255, 255, 255);")
         self.pushButton_39.setStyleSheet(u"background-color: rgb(99, 69, 44);\n"

@@ -213,35 +213,49 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEngineSettings, QWebEngineView
 from os import path
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super(QMainWindow, self).__init__()
+# class MainWindow(QMainWindow):
+#     def __init__(self):
+#         super(QMainWindow, self).__init__()
+#
+#         self.setWindowTitle("PDF Viewer")
+#         self.setGeometry(0, 28, 1000, 750)
+#         self.centralWidget = QWidget(self)
+#
+#         self.webView = QWebEngineView()
+#         self.webView.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+#         self.webView.settings().setAttribute(QWebEngineSettings.PdfViewerEnabled, True)
+#         self.setCentralWidget(self.webView)
+#
+#     def url_changed(self):
+#         self.setWindowTitle(self.webView.title())
+#
+#     def go_back(self):
+#         self.webView.back()
+#
+# if __name__ == '__main__':
+#
+#     import sys
+#     app = QApplication(sys.argv)
+#     win = MainWindow()
+#     win.show()
+#     if len(sys.argv) > 1:
+#         win.webView.setUrl(QUrl(f"file://{sys.argv[1]}"))
+#     else:
+#         wd = path.dirname(sys.argv[0])
+#         test_pdf = "test.pdf"
+#         win.webView.setUrl(QUrl(f"file://{wd}/{test_pdf}"))
+#     sys.exit(app.exec_())
 
-        self.setWindowTitle("PDF Viewer")
-        self.setGeometry(0, 28, 1000, 750)
-        self.centralWidget = QWidget(self)
 
-        self.webView = QWebEngineView()
-        self.webView.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-        self.webView.settings().setAttribute(QWebEngineSettings.PdfViewerEnabled, True)
-        self.setCentralWidget(self.webView)
+from pydub import AudioSegment
 
-    def url_changed(self):
-        self.setWindowTitle(self.webView.title())
+def get_audio_length(file_path):
+    audio = AudioSegment.from_file(file_path)
+    length_in_milliseconds = len(audio)
+    length_in_seconds = length_in_milliseconds / 1000.0
+    return length_in_seconds
 
-    def go_back(self):
-        self.webView.back()
-
-if __name__ == '__main__':
-
-    import sys
-    app = QApplication(sys.argv)
-    win = MainWindow()
-    win.show()
-    if len(sys.argv) > 1:
-        win.webView.setUrl(QUrl(f"file://{sys.argv[1]}"))
-    else:
-        wd = path.dirname(sys.argv[0])
-        test_pdf = "test.pdf"
-        win.webView.setUrl(QUrl(f"file://{wd}/{test_pdf}"))
-    sys.exit(app.exec_())
+# Example usage
+audio_file_path = "/home/shadyai/PycharmProjects/pyqtProject1/ui/enhanced_crime.wav"
+length = get_audio_length(audio_file_path)
+print(f"Audio length: {length} seconds")
